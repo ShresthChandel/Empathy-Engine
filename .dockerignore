@@ -1,0 +1,12 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+static/output_*.mp3
+test_*.mp3
+debug*.mp3
+express_as.mp3
+README.md
