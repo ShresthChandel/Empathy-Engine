@@ -17,15 +17,15 @@ This project combines a Hugging Face emotion classifier, VADER sentiment scaling
 
 ### Landing UI
 
-![Landing UI](docs/images/landing-ui.svg)
+<img width="1919" height="749" alt="Screenshot 2026-04-16 022414" src="https://github.com/user-attachments/assets/a95a8cd0-c6da-4d9c-b5a4-24010ac60a10" />
 
-### Graphical Analysis and Prosody Dashboard
+### Graphical Analysis
 
-![Graphical Analysis](docs/images/graphical-analysis.svg)
+<img width="354" height="287" alt="Screenshot 2026-04-16 022525" src="https://github.com/user-attachments/assets/e0fbbc71-9551-43ad-978a-11a47d41142c" />
 
 ### Custom Play/Pause Control and SSML Preview
 
-![Custom Player](docs/images/custom-player.svg)
+<img width="370" height="324" alt="Screenshot 2026-04-16 022623" src="https://github.com/user-attachments/assets/8bd6479c-f7f6-4738-910e-c547ce9709b4" />
 
 ### Emotion Color Language
 
@@ -39,7 +39,7 @@ The interface intentionally shifts color by dominant emotion so the visual mood 
 - Disgust uses lime-green highlights
 - Neutral stays in a calm blue baseline
 
-![Emotion Palette](docs/images/emotion-palette.svg)
+<img width="800" height="560" alt="image" src="https://github.com/user-attachments/assets/5ab65a62-ccc4-4b07-bfc4-4a0ef12fc1f9" />
 
 ## Why This Project Matters
 
