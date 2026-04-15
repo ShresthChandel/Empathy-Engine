@@ -23,6 +23,7 @@ def index():
 def synthesize():
     data = request.get_json()
     text = data.get("text", "").strip()
+    voice_name = data.get("voice", "en-US-AriaNeural")
     
     if not text:
         return jsonify({"error": "No text provided"}), 400
@@ -37,12 +38,21 @@ def synthesize():
     params = map_params(analysis["top_emotion"], analysis["intensity"])
     
     # 3. Build literal SSML XML payload
-    ssml = build_ssml(text, params)
+    ssml = build_ssml(text, params, voice_name=voice_name)
     
     # 4. Generate TTS via engine consuming exactly the SSML text
-    os.makedirs(os.path.join(app.root_path, "static"), exist_ok=True)
+    static_dir = os.path.join(app.root_path, "static")
+    os.makedirs(static_dir, exist_ok=True)
+    
+    import glob
+    for old_file in glob.glob(os.path.join(static_dir, "output_*.mp3")):
+        try:
+            os.remove(old_file)
+        except:
+            pass
+            
     filename = f"output_{uuid.uuid4().hex}.mp3"
-    filepath = os.path.join(app.root_path, "static", filename)
+    filepath = os.path.join(static_dir, filename)
     
     try:
         generate_mp3_from_ssml(ssml, filepath)

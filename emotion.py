@@ -25,7 +25,7 @@ class EmotionAnalyzer:
         exclamation_boost = min(text.count('!') * 0.15, 0.4)
         caps_boost = 0.2 if text.isupper() and len(text) > 3 else 0.0
         
-        intensity = min(compound + exclamation_boost + caps_boost + 0.1, 1.0)
+        intensity = min(compound + exclamation_boost + caps_boost, 1.0)
         
         return {
             "top_emotion": top_emotion,

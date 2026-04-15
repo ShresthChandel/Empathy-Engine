@@ -46,7 +46,13 @@
 
             <textarea id="text-input" rows="3" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="e.g. THIS IS THE BEST DAY EVER!!!"></textarea>
             
-            <div class="flex justify-end mt-4">
+            <div class="flex items-center justify-between mt-4">
+                <select id="voice-select" class="bg-slate-800/80 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner">
+                    <option value="en-US-AriaNeural">Aria (Warm, Professional)</option>
+                    <option value="en-US-GuyNeural">Guy (Authoritative)</option>
+                    <option value="en-GB-SoniaNeural">Sonia (UK Formal)</option>
+                    <option value="en-IN-NeerjaNeural">Neerja (Indian Friendly)</option>
+                </select>
                 <button id="synth-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                     Synthesize Speech
                 </button>
@@ -127,7 +133,10 @@
                 const res = await fetch('/synthesize', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text})
+                    body: JSON.stringify({
+                        text: text,
+                        voice: document.getElementById('voice-select').value
+                    })
                 });
                 
                 const data = await res.json();
