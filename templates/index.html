@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Empathy Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen py-10 px-4">
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center space-y-3">
+            <div class="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs font-bold tracking-widest uppercase">
+                7-Class Emotion Pipeline
+            </div>
+            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                The Empathy Engine
+            </h1>
+            <p class="text-gray-400 max-w-2xl mx-auto">
+                Enter a phrase to analyze its emotional signature. The ML pipeline will calculate intensity and format an SSML payload, resulting in highly expressive speech.
+            </p>
+        </div>
+
+        <!-- Main Input Area -->
+        <div class="glass-panel rounded-2xl p-6 shadow-2xl relative">
+            <div id="loading" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur flex items-center justify-center z-10 rounded-2xl">
+                <div class="text-center space-y-4">
+                    <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <div class="text-blue-400 font-bold tracking-widest text-sm">PROCESSING SSML...</div>
+                </div>
+            </div>
+
+            <textarea id="text-input" rows="3" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="e.g. THIS IS THE BEST DAY EVER!!!"></textarea>
+            
+            <div class="flex justify-end mt-4">
+                <button id="synth-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    Synthesize Speech
+                </button>
+            </div>
+            <div id="error-msg" class="text-red-400 mt-2 font-medium hidden"></div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="results-area" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+            
+            <!-- Emotion Chart -->
+            <div class="glass-panel rounded-2xl p-6 space-y-4">
+                <h2 class="text-sm font-bold text-slate-400 tracking-wider uppercase">Emotion Confidence</h2>
+                <div class="h-64 w-full">
+                    <canvas id="emotionChart"></canvas>
+                </div>
+                <div class="flex justify-between items-end border-t border-slate-700 pt-4 mt-2">
+                    <div>
+                        <div class="text-xs text-slate-500 font-bold uppercase mb-1">Top Emotion</div>
+                        <div id="top-emotion-badge" class="text-xl font-black capitalize text-blue-400">Neutral</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500 font-bold uppercase mb-1">Intensity Scalar</div>
+                        <div id="intensity-val" class="text-2xl font-black text-white">0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prosody & Audio -->
+            <div class="glass-panel rounded-2xl p-6 space-y-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-400 tracking-wider uppercase mb-4">SSML Prosody Parameters</h2>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-800/60 rounded-lg p-3 text-center border border-slate-700">
+                            <div class="text-[10px] text-slate-400 uppercase font-bold">Rate</div>
+                            <div id="param-rate" class="text-lg font-bold">0%</div>
+                        </div>
+                        <div class="bg-slate-800/60 rounded-lg p-3 text-center border border-slate-700">
+                            <div class="text-[10px] text-slate-400 uppercase font-bold">Pitch</div>
+                            <div id="param-pitch" class="text-lg font-bold">0Hz</div>
+                        </div>
+                        <div class="bg-slate-800/60 rounded-lg p-3 text-center border border-slate-700">
+                            <div class="text-[10px] text-slate-400 uppercase font-bold">Volume</div>
+                            <div id="param-volume" class="text-lg font-bold">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+                    <h3 class="text-xs text-slate-500 font-bold uppercase mb-2">Raw SSML Payload</h3>
+                    <code id="ssml-raw" class="text-xs text-emerald-400 break-all"></code>
+                </div>
+
+                <div class="flex flex-col items-center justify-center pt-2">
+                    <audio id="audio-player" class="w-full" controls></audio>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        document.getElementById('synth-btn').addEventListener('click', async () => {
+            const text = document.getElementById('text-input').value;
+            if(!text) return;
+
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('error-msg');
+            const resultsArea = document.getElementById('results-area');
+
+            loading.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+            resultsArea.classList.add('hidden');
+
+            try {
+                const res = await fetch('/synthesize', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                
+                const data = await res.json();
+                
+                if(!res.ok) throw new Error(data.error || 'Server error');
+
+                // Populate UI
+                document.getElementById('top-emotion-badge').textContent = data.analysis.top_emotion;
+                document.getElementById('intensity-val').textContent = data.analysis.intensity.toFixed(2);
+                document.getElementById('param-rate').textContent = data.vocal_parameters.rate;
+                document.getElementById('param-pitch').textContent = data.vocal_parameters.pitch;
+                document.getElementById('param-volume').textContent = data.vocal_parameters.volume;
+                document.getElementById('ssml-raw').textContent = data.ssml_payload;
+                
+                // Set audio source and play
+                const player = document.getElementById('audio-player');
+                player.src = data.audio_url + '?t=' + new Date().getTime(); // cache busting
+                
+                // Render Chart
+                renderChart(data.analysis.all_scores);
+
+                resultsArea.classList.remove('hidden');
+                setTimeout(() => player.play(), 200);
+
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        });
+
+        function renderChart(scoresObj) {
+            const ctx = document.getElementById('emotionChart').getContext('2d');
+            const labels = Object.keys(scoresObj).map(l => l.charAt(0).toUpperCase() + l.slice(1));
+            const data = Object.values(scoresObj);
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Confidence Score',
+                        data: data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            beginAtZero: true, max: 1,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#e2e8f0', font: {weight: 'bold'} }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
