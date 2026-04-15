@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, url_for
 import os
 import uuid
 from emotion import EmotionAnalyzer
-from voice_mapper import map_params
+from voice_mapper import map_params, get_dynamic_voice, apply_lexical_padding
 from ssml_builder import build_ssml
 from tts_engine import generate_mp3_from_ssml
 
@@ -35,7 +35,15 @@ def synthesize():
     analysis = analyzer.analyze(text)
     
     # 2. Map emotion and intensity to prosody traits
-    params = map_params(analysis["top_emotion"], analysis["intensity"])
+    top_emotion = analysis["top_emotion"]
+    intensity = analysis["intensity"]
+    
+    if voice_name == "auto":
+        voice_name = get_dynamic_voice(top_emotion)
+        
+    text = apply_lexical_padding(text, top_emotion, intensity)
+    
+    params = map_params(top_emotion, intensity)
     
     # 3. Build literal SSML XML payload
     ssml = build_ssml(text, params, voice_name=voice_name)

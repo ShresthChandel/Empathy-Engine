@@ -24,3 +24,34 @@ def map_params(emotion: str, intensity: float):
         "volume": f"+{volume_val}%" if volume_val >= 0 else f"{volume_val}%",
         "pauses_style": cfg["pauses"]
     }
+
+def get_dynamic_voice(emotion: str) -> str:
+    # Route specific emotions to neural personas with inherently matching timbre boundaries.
+    routing = {
+        "joy": "en-US-SaraNeural",        # Bright, smiling delivery
+        "surprise": "en-US-SaraNeural",
+        "anger": "en-US-GuyNeural",         # Deep, authoritative chest voice
+        "sadness": "en-US-JaneNeural",      # Softer, breathy, subdued
+        "fear": "en-US-JaneNeural",
+        "disgust": "en-US-JasonNeural",     # Stern, contemptuous cadence
+        "neutral": "en-US-AriaNeural"       # Warm, professional standard
+    }
+    return routing.get(emotion, "en-US-AriaNeural")
+
+def apply_lexical_padding(text: str, emotion: str, intensity: float) -> str:
+    # Context Shading: We silently prepend structural punctuation/timing to the stream
+    # to trick the neural network into changing its posture gracefully.
+    
+    if emotion in ["sadness", "fear"] and intensity > 0.4:
+        # Pushing a silent breath hesitation at the beginning softens the delivery naturally
+        return "... " + text
+        
+    elif emotion == "disgust" and intensity > 0.4:
+        # A disjointed start mimics contempt/appallment
+        return "... " + text
+        
+    elif emotion == "anger" and intensity > 0.5:
+        # Naturally forces a louder volume projection
+        return text.upper()
+        
+    return text
