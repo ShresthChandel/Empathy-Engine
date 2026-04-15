@@ -27,14 +27,15 @@ def map_params(emotion: str, intensity: float):
 
 def get_dynamic_voice(emotion: str) -> str:
     # Route specific emotions to neural personas with inherently matching timbre boundaries.
+    # IMPORTANT: We only use verified Edge-TTS native free voices
     routing = {
-        "joy": "en-US-SaraNeural",        # Bright, smiling delivery
-        "surprise": "en-US-SaraNeural",
-        "anger": "en-US-GuyNeural",         # Deep, authoritative chest voice
-        "sadness": "en-US-JaneNeural",      # Softer, breathy, subdued
-        "fear": "en-US-JaneNeural",
-        "disgust": "en-US-JasonNeural",     # Stern, contemptuous cadence
-        "neutral": "en-US-AriaNeural"       # Warm, professional standard
+        "joy": "en-US-EmmaNeural",          # Cheerful, Clear
+        "surprise": "en-US-EmmaNeural",
+        "anger": "en-US-GuyNeural",         # Passion, High energy
+        "sadness": "en-US-AvaNeural",       # Caring, Expressive (softens beautifully)
+        "fear": "en-US-AvaNeural",
+        "disgust": "en-US-EricNeural",      # Rational, Stern
+        "neutral": "en-US-AriaNeural"       # Positive, Confident
     }
     return routing.get(emotion, "en-US-AriaNeural")
 
